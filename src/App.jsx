@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Gift, Volume2, VolumeX } from 'lucide-react';
+import { Gift, Volume2, VolumeX, ArrowDown } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import bdaySong from './assets/happy-birthday.mp3';
 
@@ -117,10 +117,6 @@ const CakeRitual = ({ onBlow, isMuted, toggleMute }) => {
       exit={{ opacity: 0 }}
       className="flex flex-col items-center justify-center h-screen relative z-10"
     >
-      <div className="absolute top-8 right-8 cursor-pointer text-white/50 hover:text-white" onClick={toggleMute}>
-        {isMuted ? <VolumeX /> : <Volume2 />}
-      </div>
-
       <div className="relative">
         {/* Cake Base */}
         <div className="flex flex-col items-center">
@@ -144,15 +140,42 @@ const CakeRitual = ({ onBlow, isMuted, toggleMute }) => {
         ></motion.div>
       </div>
 
-      <motion.button
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 1 }}
-        onClick={onBlow}
-        className="mt-16 px-8 py-3 bg-gradient-to-r from-electric-purple to-pink-600 text-white rounded-full font-bold shadow-lg shadow-purple-500/30 hover:shadow-purple-500/50 hover:scale-105 transition-all duration-300"
-      >
-        Make a wish and blow!
-      </motion.button>
+      <div className="relative mt-16 flex items-center">
+        <motion.button
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 1 }}
+          onClick={onBlow}
+          className="px-8 py-3 bg-gradient-to-r from-electric-purple to-pink-600 text-white rounded-full font-bold shadow-lg shadow-purple-500/30 hover:shadow-purple-500/50 hover:scale-105 transition-all duration-300 relative z-10"
+        >
+          Make a wish and blow!
+        </motion.button>
+
+        <motion.div
+          initial={{ opacity: 0, x: 10 }}
+          animate={{ opacity: 1, x: [0, 5, 0] }}
+          transition={{ delay: 2, duration: 2, repeat: Infinity, ease: "easeInOut" }}
+          className="absolute left-full ml-4 -top-1 -translate-y-1/2 hidden lg:flex items-center pointer-events-none w-max"
+        >
+          {/* 1st Arrow: Tip pointing Left at the button */}
+          <svg width="60" height="40" viewBox="0 0 60 40" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-gold/80">
+            <path d="M55 5C55 25 35 35 5 35M5 35L12 28M5 35L12 42" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+
+          {/* 2nd Text: Placed at the tail endpoint of the arrow */}
+
+        </motion.div>
+        <motion.div
+          initial={{ opacity: 0, x: 10 }}
+          animate={{ opacity: 1, x: [0, 5, 0] }}
+          transition={{ delay: 2, duration: 2, repeat: Infinity, ease: "easeInOut" }}
+          className=" absolute -right-[45%] -top-5 -translate-y-1/2 hidden lg:flex items-center pointer-events-none w-max"
+        >
+          {/* 1st Arrow: Tip pointing Left at the button */}
+          <span className="text-gold text-[10px] font-black tracking-widest uppercase drop-shadow-[0_0_8px_rgba(255,215,0,0.4)]  ">Click Here</span>
+
+        </motion.div>
+      </div>
     </motion.div>
   );
 };
@@ -262,7 +285,7 @@ const GrandReveal = () => {
           "May this year bring you as much joy, brilliance, and success as you bring to the world. Keep shining like the star you are!"
         </p>
         <div className="mt-6 flex justify-end">
-          <span className="text-sm text-gold font-medium tracking-wider uppercase">- with love akil</span>
+          <span className="text-sm text-gold font-medium tracking-wider uppercase">- With love, Akil ❤️</span>
         </div>
       </motion.div>
     </motion.div>
