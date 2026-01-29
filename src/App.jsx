@@ -41,11 +41,17 @@ const Background = () => {
 const CursorTrail = () => {
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [isVisible, setIsVisible] = useState(false);
+  const [isHovering, setIsHovering] = useState(false);
 
   useEffect(() => {
     const handleMouseMove = (e) => {
       setPosition({ x: e.clientX, y: e.clientY });
       setIsVisible(true);
+
+      // Check if hovering over a button or link
+      const target = e.target;
+      const isInteractive = target.closest('button') || target.closest('a') || target.onclick;
+      setIsHovering(!!isInteractive);
     };
     const handleMouseLeave = () => setIsVisible(false);
 
@@ -62,12 +68,15 @@ const CursorTrail = () => {
 
   return (
     <div
-      className="pointer-events-none fixed top-0 left-0 w-4 h-4 bg-gold rounded-full blur-[2px] z-[9999] mix-blend-screen"
+      className="pointer-events-none fixed top-0 left-0 z-[9999] text-2xl transition-opacity duration-200"
       style={{
-        transform: `translate(${position.x}px, ${position.y}px)`,
-        boxShadow: '0 0 10px 2px rgba(191,0,255,0.8)'
+        transform: `translate(${position.x}px, ${position.y}px) translate(-50%, -50%)`,
+        filter: 'drop-shadow(0 0 8px rgba(191,0,255,0.4))',
+        opacity: isHovering ? 0 : 1
       }}
-    />
+    >
+      🎂
+    </div>
   );
 };
 
@@ -245,7 +254,7 @@ const GrandReveal = () => {
     }());
   }, []);
 
-  const name = "Akilan"; // Using user name from metadata context if available, or placeholder
+  const name = "Nanba"; // Using user name from metadata context if available, or placeholder
   const letters = name.split("");
 
   return (
