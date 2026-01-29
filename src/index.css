@@ -1,0 +1,23 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-slate-950 text-white overflow-hidden;
+    font-family: 'Happy Monkey', system-ui, sans-serif;
+  }
+}
+
+/* Custom Cursor */
+.cursor-trail {
+  pointer-events: none;
+  position: fixed;
+  width: 10px;
+  height: 10px;
+  background: radial-gradient(circle, rgba(191, 0, 255, 1) 0%, rgba(255, 215, 0, 0) 70%);
+  border-radius: 50%;
+  z-index: 9999;
+  mix-blend-mode: screen;
+  transition: transform 0.1s ease;
+}
