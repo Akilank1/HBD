@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Gift, Volume2, VolumeX, ArrowDown } from 'lucide-react';
+import { Gift, Volume2, VolumeX, ArrowDown, Settings, Lock, Save, X, Check } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import bdaySong from './assets/happy-birthday.mp3';
 
@@ -155,7 +155,7 @@ const CakeRitual = ({ onBlow, isMuted, toggleMute }) => {
           animate={{ opacity: 1 }}
           transition={{ delay: 1 }}
           onClick={onBlow}
-          className="px-8 py-3 bg-gradient-to-r from-electric-purple to-pink-600 text-white rounded-full font-bold shadow-lg shadow-purple-500/30 hover:shadow-purple-500/50 hover:scale-105 transition-all duration-300 relative z-10"
+          className="px-8 py-3 bg-gradient-to-r from-electric-purple to-pink-600 text-white rounded-full font-bold shadow-lg shadow-purple-500/30 hover:shadow-purple-500/50 hover:scale-110 transition-transform duration-300 relative z-10"
         >
           Make a wish and blow!
         </motion.button>
@@ -224,15 +224,154 @@ const FloatingEmojis = () => {
   );
 };
 
+// --- Admin Screen Component ---
+const AdminScreen = ({ onSave, onExit, currentBirthdayName, currentWisherName }) => {
+  const [password, setPassword] = useState('');
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [birthdayName, setBirthdayName] = useState(currentBirthdayName);
+  const [wisherName, setWisherName] = useState(currentWisherName);
+  const [error, setError] = useState('');
+  const [showSuccess, setShowSuccess] = useState(false);
+
+  const handleLogin = (e) => {
+    e.preventDefault();
+    if (password === 'Akilan') {
+      setIsLoggedIn(true);
+      setError('');
+    } else {
+      setError('Invalid password');
+    }
+  };
+
+  const handleSave = (e) => {
+    e.preventDefault();
+    onSave({ birthdayName, wisherName });
+    setShowSuccess(true);
+    setTimeout(() => setShowSuccess(false), 3000);
+  };
+
+  if (!isLoggedIn) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="flex items-center justify-center h-screen relative z-[1000] p-6 bg-slate-950/80 backdrop-blur-sm"
+      >
+        <div className="bg-white/5 backdrop-blur-xl border border-white/20 p-8 rounded-2xl max-w-sm w-full shadow-2xl relative overflow-hidden">
+          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-electric-purple to-pink-600"></div>
+          <div className="flex justify-center mb-6">
+            <div className="p-3 bg-electric-purple/10 rounded-full border border-electric-purple/20">
+              <Lock className="text-electric-purple" size={24} />
+            </div>
+          </div>
+          <h2 className="text-2xl font-bold mb-6 text-center text-white">Admin Access</h2>
+          <form onSubmit={handleLogin} className="space-y-4">
+            <div>
+              <input
+                type="password"
+                placeholder="Enter Password"
+                className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-electric-purple/50 transition-colors"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                autoFocus
+              />
+            </div>
+            {error && <p className="text-red-400 text-sm text-center font-medium">{error}</p>}
+            <button className="w-full py-3 bg-gradient-to-r from-electric-purple to-pink-600 rounded-xl font-bold text-white hover:opacity-90 transition-all shadow-lg shadow-purple-500/20 active:scale-[0.98]">
+              Unlock Dashboard
+            </button>
+            <button type="button" onClick={onExit} className="w-full text-white/40 text-sm mt-4 hover:text-white transition-colors">
+              Go Back to Party
+            </button>
+          </form>
+        </div>
+      </motion.div>
+    );
+  }
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      className="flex items-center justify-center h-screen relative z-[1000] p-6 bg-slate-950/80 backdrop-blur-sm"
+    >
+      <div className="bg-white/5 backdrop-blur-xl border border-white/20 p-8 rounded-2xl max-w-md w-full shadow-2xl relative overflow-hidden">
+        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-electric-purple to-pink-600"></div>
+        <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-gold/10 rounded-lg border border-gold/20">
+              <Settings className="text-gold" size={20} />
+            </div>
+            <h2 className="text-xl font-bold text-white">Site Settings</h2>
+          </div>
+          <button onClick={onExit} className="p-2 hover:bg-white/5 rounded-full transition-colors text-white/40 hover:text-white">
+            <X size={20} />
+          </button>
+        </div>
+
+        <form onSubmit={handleSave} className="space-y-6">
+          <div className="space-y-4">
+            <div>
+              <label className="block text-white/50 text-xs font-semibold uppercase tracking-wider mb-2 ml-1">Birthday Person Name</label>
+              <input
+                type="text"
+                placeholder="e.g. Nanba"
+                className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-electric-purple/50 transition-colors"
+                value={birthdayName}
+                onChange={(e) => setBirthdayName(e.target.value)}
+              />
+            </div>
+            <div>
+              <label className="block text-white/50 text-xs font-semibold uppercase tracking-wider mb-2 ml-1">Wisher Name</label>
+              <input
+                type="text"
+                placeholder="e.g. Akil"
+                className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-electric-purple/50 transition-colors"
+                value={wisherName}
+                onChange={(e) => setWisherName(e.target.value)}
+              />
+            </div>
+          </div>
+
+          <div className="pt-4 flex gap-3">
+            <button className="flex-[2] py-3 bg-gradient-to-r from-electric-purple to-pink-600 rounded-xl font-bold text-white flex items-center justify-center gap-2 hover:opacity-90 transition-all shadow-lg shadow-purple-500/20 active:scale-[0.98]">
+              <Save size={18} />
+              Save Changes
+            </button>
+            <button type="button" onClick={onExit} className="flex-1 py-3 bg-white/5 border border-white/10 rounded-xl font-bold text-white/80 hover:bg-white/10 transition-all active:scale-[0.98]">
+              Done
+            </button>
+          </div>
+        </form>
+
+        {/* Success Toast */}
+        <AnimatePresence>
+          {showSuccess && (
+            <motion.div
+              initial={{ opacity: 0, y: 20, scale: 0.9 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9 }}
+              className="absolute bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-2 bg-green-500/90 backdrop-blur-md text-white px-4 py-2 rounded-full shadow-lg border border-green-400/50 z-[1001]"
+            >
+              <Check size={16} strokeWidth={3} />
+              <span className="text-sm font-bold">Changes Saved!</span>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+    </motion.div>
+  );
+};
+
 // --- Section 3: Grand Reveal ---
-const GrandReveal = () => {
+const GrandReveal = ({ birthdayName, wisherName }) => {
   useEffect(() => {
     const end = Date.now() + 3 * 1000;
     const colors = ['#FFD700', '#BF00FF', '#ffffff'];
 
     (function frame() {
       confetti({
-        particleCount: 5,
+        particleCount: 3,
         angle: 60,
         spread: 55,
         origin: { x: 0 },
@@ -240,7 +379,7 @@ const GrandReveal = () => {
         shapes: ['circle', 'star']
       });
       confetti({
-        particleCount: 5,
+        particleCount: 3,
         angle: 120,
         spread: 55,
         origin: { x: 1 },
@@ -254,8 +393,7 @@ const GrandReveal = () => {
     }());
   }, []);
 
-  const name = "Nanba"; // Using user name from metadata context if available, or placeholder
-  const letters = name.split("");
+  const letters = (birthdayName || "Nanba").split("");
 
   return (
     <motion.div
@@ -294,7 +432,7 @@ const GrandReveal = () => {
           "May this year bring you as much joy, brilliance, and success as you bring to the world. Keep shining like the star you are!"
         </p>
         <div className="mt-6 flex justify-end">
-          <span className="text-sm text-gold font-medium tracking-wider uppercase">- With love, Akil ❤️</span>
+          <span className="text-sm text-gold font-medium tracking-wider uppercase">- With love, {wisherName || "Akil"} ❤️</span>
         </div>
       </motion.div>
     </motion.div>
@@ -307,7 +445,18 @@ const BDAY_SONG = bdaySong;
 function App() {
   const [stage, setStage] = useState('gift'); // gift | cake | reveal
   const [isMuted, setIsMuted] = useState(true);
+  const [isAdmin, setIsAdmin] = useState(window.location.hash === '#admin');
+  const [birthdayName, setBirthdayName] = useState(() => localStorage.getItem('bday_name') || 'Nanba');
+  const [wisherName, setWisherName] = useState(() => localStorage.getItem('wisher_name') || 'Akil');
   const audioRef = React.useRef(null);
+
+  useEffect(() => {
+    const handleHashChange = () => {
+      setIsAdmin(window.location.hash === '#admin');
+    };
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, []);
 
   useEffect(() => {
     // Initialize audio object once
@@ -367,9 +516,29 @@ function App() {
       </div>
 
       <AnimatePresence mode="wait">
-        {stage === 'gift' && <GiftLanding key="gift" onOpen={handleOpenGift} />}
-        {stage === 'cake' && <CakeRitual key="cake" onBlow={handleBlowCandle} isMuted={isMuted} toggleMute={toggleMute} />}
-        {stage === 'reveal' && <GrandReveal key="reveal" />}
+        {isAdmin ? (
+          <AdminScreen
+            key="admin"
+            currentBirthdayName={birthdayName}
+            currentWisherName={wisherName}
+            onExit={() => {
+              window.location.hash = '';
+              setIsAdmin(false);
+            }}
+            onSave={({ birthdayName, wisherName }) => {
+              setBirthdayName(birthdayName);
+              setWisherName(wisherName);
+              localStorage.setItem('bday_name', birthdayName);
+              localStorage.setItem('wisher_name', wisherName);
+            }}
+          />
+        ) : (
+          <>
+            {stage === 'gift' && <GiftLanding key="gift" onOpen={handleOpenGift} />}
+            {stage === 'cake' && <CakeRitual key="cake" onBlow={handleBlowCandle} isMuted={isMuted} toggleMute={toggleMute} />}
+            {stage === 'reveal' && <GrandReveal key="reveal" birthdayName={birthdayName} wisherName={wisherName} />}
+          </>
+        )}
       </AnimatePresence>
     </div>
   );
