@@ -1,29 +1,20 @@
 import { getStore } from "@netlify/blobs";
 
 export const handler = async (event, context) => {
-    // Store names in a blob called 'birthday-config'
-    const store = getStore({
-        name: "birthday-config",
-        // In production, these are automatically provided by Netlify
-        // For local dev, they might need Netlify CLI
-        siteID: process.env.SITE_ID,
-        token: process.env.NETLIFY_PURGE_API_TOKEN || process.env.NETLIFY_AUTH_TOKEN
-    });
+    // In Netlify production, this connects to the global store automatically
+    const store = getStore("birthday-config");
 
     const method = event.httpMethod;
 
     try {
         if (method === "GET") {
-            let data;
-            try {
-                data = await store.get("names", { type: "json" });
-            } catch (e) {
-                console.error("Error fetching from blobs:", e);
-            }
-
+            const data = await store.get("names", { type: "json" });
             return {
                 statusCode: 200,
-                headers: { "Content-Type": "application/json" },
+                headers: {
+                    "Content-Type": "application/json",
+                    "Cache-Control": "no-cache" // Ensure users always get the latest names
+                },
                 body: JSON.stringify(data || {
                     birthdayName: "Nanba",
                     wisherName: "Akil"
@@ -32,35 +23,29 @@ export const handler = async (event, context) => {
         }
 
         if (method === "POST") {
-            const body = JSON.parse(event.body);
-            const { birthdayName, wisherName, password } = body;
+            const { birthdayName, wisherName, password } = JSON.parse(event.body);
 
-            // Simple password check
             if (password !== "Akilan") {
                 return {
                     statusCode: 401,
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ error: "Unauthorized" }),
+                    body: JSON.stringify({ error: "Invalid Admin Password" }),
                 };
             }
 
+            // Save to global storage
             await store.setJSON("names", { birthdayName, wisherName });
 
             return {
                 statusCode: 200,
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ message: "Updated successfully" }),
+                body: JSON.stringify({ message: "Updated globally!" }),
             };
         }
     } catch (error) {
         return {
             statusCode: 500,
-            body: JSON.stringify({ error: error.message }),
+            body: JSON.stringify({ error: "Database Connection Failed" }),
         };
     }
 
-    return {
-        statusCode: 405,
-        body: "Method Not Allowed",
-    };
+    return { statusCode: 405, body: "Method Not Allowed" };
 };

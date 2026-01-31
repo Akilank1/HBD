@@ -233,6 +233,20 @@ const AdminScreen = ({ onSave, onExit, currentBirthdayName, currentWisherName })
   const [error, setError] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [connectionStatus, setConnectionStatus] = useState('checking'); // checking | global | local
+
+  useEffect(() => {
+    const checkConnection = async () => {
+      try {
+        const res = await fetch('/.netlify/functions/config');
+        if (res.ok) setConnectionStatus('global');
+        else setConnectionStatus('local');
+      } catch {
+        setConnectionStatus('local');
+      }
+    };
+    checkConnection();
+  }, []);
 
   const handleLogin = (e) => {
     e.preventDefault();
@@ -311,7 +325,15 @@ const AdminScreen = ({ onSave, onExit, currentBirthdayName, currentWisherName })
             <div className="p-2 bg-gold/10 rounded-lg border border-gold/20">
               <Settings className="text-gold" size={20} />
             </div>
-            <h2 className="text-xl font-bold text-white">Site Settings</h2>
+            <div>
+              <h2 className="text-xl font-bold text-white">Site Settings</h2>
+              <div className="flex items-center gap-1.5 mt-0.5">
+                <div className={`w-1.5 h-1.5 rounded-full ${connectionStatus === 'global' ? 'bg-green-500 animate-pulse' : 'bg-orange-500'}`}></div>
+                <span className="text-[10px] uppercase tracking-widest font-bold text-white/30">
+                  {connectionStatus === 'global' ? 'Global Cloud Sync Active' : 'Local Storage Only (Deploy to Sync)'}
+                </span>
+              </div>
+            </div>
           </div>
           <button onClick={onExit} className="p-2 hover:bg-white/5 rounded-full transition-colors text-white/40 hover:text-white">
             <X size={20} />
