@@ -231,6 +231,7 @@ const AdminScreen = ({ onSave, onExit, currentBirthdayName, currentWisherName })
   const [birthdayName, setBirthdayName] = useState(currentBirthdayName);
   const [wisherName, setWisherName] = useState(currentWisherName);
   const [error, setError] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
 
   const handleLogin = (e) => {
@@ -243,11 +244,19 @@ const AdminScreen = ({ onSave, onExit, currentBirthdayName, currentWisherName })
     }
   };
 
-  const handleSave = (e) => {
+  const handleSave = async (e) => {
     e.preventDefault();
-    onSave({ birthdayName, wisherName });
-    setShowSuccess(true);
-    setTimeout(() => setShowSuccess(false), 3000);
+    setIsSaving(true);
+    setError('');
+    try {
+      await onSave({ birthdayName, wisherName, password });
+      setShowSuccess(true);
+      setTimeout(() => setShowSuccess(false), 3000);
+    } catch (err) {
+      setError(err.message || 'Failed to save changes');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   if (!isLoggedIn) {
@@ -270,7 +279,7 @@ const AdminScreen = ({ onSave, onExit, currentBirthdayName, currentWisherName })
               <input
                 type="password"
                 placeholder="Enter Password"
-                className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-electric-purple/50 transition-colors"
+                className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-electric-purple/50 transition-colors placeholder:text-white/20"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 autoFocus
@@ -333,10 +342,21 @@ const AdminScreen = ({ onSave, onExit, currentBirthdayName, currentWisherName })
             </div>
           </div>
 
+          {error && <p className="text-red-400 text-sm text-center font-medium">{error}</p>}
+
           <div className="pt-4 flex gap-3">
-            <button className="flex-[2] py-3 bg-gradient-to-r from-electric-purple to-pink-600 rounded-xl font-bold text-white flex items-center justify-center gap-2 hover:opacity-90 transition-all shadow-lg shadow-purple-500/20 active:scale-[0.98]">
-              <Save size={18} />
-              Save Changes
+            <button
+              disabled={isSaving}
+              className="flex-[2] py-3 bg-gradient-to-r from-electric-purple to-pink-600 rounded-xl font-bold text-white flex items-center justify-center gap-2 hover:opacity-90 transition-all shadow-lg shadow-purple-500/20 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isSaving ? (
+                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+              ) : (
+                <>
+                  <Save size={18} />
+                  Save Changes
+                </>
+              )}
             </button>
             <button type="button" onClick={onExit} className="flex-1 py-3 bg-white/5 border border-white/10 rounded-xl font-bold text-white/80 hover:bg-white/10 transition-all active:scale-[0.98]">
               Done
@@ -446,9 +466,34 @@ function App() {
   const [stage, setStage] = useState('gift'); // gift | cake | reveal
   const [isMuted, setIsMuted] = useState(true);
   const [isAdmin, setIsAdmin] = useState(window.location.hash === '#admin');
-  const [birthdayName, setBirthdayName] = useState(() => localStorage.getItem('bday_name') || 'Nanba');
-  const [wisherName, setWisherName] = useState(() => localStorage.getItem('wisher_name') || 'Akil');
+  const [birthdayName, setBirthdayName] = useState('Nanba');
+  const [wisherName, setWisherName] = useState('Akil');
+  const [isLoading, setIsLoading] = useState(true);
   const audioRef = React.useRef(null);
+
+  useEffect(() => {
+    // Fetch initial data
+    const fetchData = async () => {
+      try {
+        const response = await fetch('/.netlify/functions/config');
+        if (response.ok) {
+          const data = await response.json();
+          setBirthdayName(data.birthdayName);
+          setWisherName(data.wisherName);
+        }
+      } catch (error) {
+        console.error("Failed to fetch config:", error);
+        // Fallback to local storage if available
+        const localBday = localStorage.getItem('bday_name');
+        const localWisher = localStorage.getItem('wisher_name');
+        if (localBday) setBirthdayName(localBday);
+        if (localWisher) setWisherName(localWisher);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
 
   useEffect(() => {
     const handleHashChange = () => {
@@ -516,7 +561,22 @@ function App() {
       </div>
 
       <AnimatePresence mode="wait">
-        {isAdmin ? (
+        {isLoading ? (
+          <motion.div
+            key="loader"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[2000] flex items-center justify-center bg-slate-950"
+          >
+            <div className="relative">
+              <div className="w-20 h-20 border-2 border-electric-purple/20 border-t-electric-purple rounded-full animate-spin"></div>
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="w-12 h-12 border-2 border-pink-500/20 border-b-pink-500 rounded-full animate-spin-reverse"></div>
+              </div>
+            </div>
+          </motion.div>
+        ) : isAdmin ? (
           <AdminScreen
             key="admin"
             currentBirthdayName={birthdayName}
@@ -525,11 +585,27 @@ function App() {
               window.location.hash = '';
               setIsAdmin(false);
             }}
-            onSave={({ birthdayName, wisherName }) => {
-              setBirthdayName(birthdayName);
-              setWisherName(wisherName);
-              localStorage.setItem('bday_name', birthdayName);
-              localStorage.setItem('wisher_name', wisherName);
+            onSave={async ({ birthdayName, wisherName, password }) => {
+              try {
+                const response = await fetch('/.netlify/functions/config', {
+                  method: 'POST',
+                  body: JSON.stringify({ birthdayName, wisherName, password }),
+                });
+
+                if (response.ok) {
+                  setBirthdayName(birthdayName);
+                  setWisherName(wisherName);
+                  localStorage.setItem('bday_name', birthdayName);
+                  localStorage.setItem('wisher_name', wisherName);
+                  return true;
+                } else {
+                  const err = await response.json();
+                  throw new Error(err.error || 'Failed to save');
+                }
+              } catch (error) {
+                console.error("Save error:", error);
+                throw error;
+              }
             }}
           />
         ) : (

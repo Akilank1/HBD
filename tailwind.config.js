@@ -13,6 +13,15 @@ export default {
             },
             fontFamily: {
                 sans: ['"Happy Monkey"', 'system-ui', 'sans-serif'],
+            },
+            animation: {
+                'spin-reverse': 'spin-reverse 1s linear infinite',
+            },
+            keyframes: {
+                'spin-reverse': {
+                    'from': { transform: 'rotate(0deg)' },
+                    'to': { transform: 'rotate(-360deg)' },
+                }
             }
         },
     },
