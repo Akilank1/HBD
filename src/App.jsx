@@ -225,11 +225,12 @@ const FloatingEmojis = () => {
 };
 
 // --- Admin Screen Component ---
-const AdminScreen = ({ onSave, onExit, currentBirthdayName, currentWisherName }) => {
+const AdminScreen = ({ onSave, onExit, currentBirthdayName, currentWisherName, currentBirthdayMessage }) => {
   const [password, setPassword] = useState('');
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [birthdayName, setBirthdayName] = useState(currentBirthdayName);
   const [wisherName, setWisherName] = useState(currentWisherName);
+  const [birthdayMessage, setBirthdayMessage] = useState(currentBirthdayMessage);
   const [error, setError] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
@@ -263,7 +264,7 @@ const AdminScreen = ({ onSave, onExit, currentBirthdayName, currentWisherName })
     setIsSaving(true);
     setError('');
     try {
-      await onSave({ birthdayName, wisherName, password });
+      await onSave({ birthdayName, wisherName, birthdayMessage, password });
       setShowSuccess(true);
       setTimeout(() => setShowSuccess(false), 3000);
     } catch (err) {
@@ -362,6 +363,16 @@ const AdminScreen = ({ onSave, onExit, currentBirthdayName, currentWisherName })
                 onChange={(e) => setWisherName(e.target.value)}
               />
             </div>
+            <div>
+              <label className="block text-white/50 text-xs font-semibold uppercase tracking-wider mb-2 ml-1">Birthday Message</label>
+              <textarea
+                rows={3}
+                placeholder="Write your wish..."
+                className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-electric-purple/50 transition-colors resize-none"
+                value={birthdayMessage}
+                onChange={(e) => setBirthdayMessage(e.target.value)}
+              />
+            </div>
           </div>
 
           {error && <p className="text-red-400 text-sm text-center font-medium">{error}</p>}
@@ -406,7 +417,7 @@ const AdminScreen = ({ onSave, onExit, currentBirthdayName, currentWisherName })
 };
 
 // --- Section 3: Grand Reveal ---
-const GrandReveal = ({ birthdayName, wisherName }) => {
+const GrandReveal = ({ birthdayName, wisherName, birthdayMessage }) => {
   useEffect(() => {
     const end = Date.now() + 3 * 1000;
     const colors = ['#FFD700', '#BF00FF', '#ffffff'];
@@ -471,7 +482,7 @@ const GrandReveal = ({ birthdayName, wisherName }) => {
       >
         <div className="absolute inset-0 bg-gradient-to-br from-electric-purple/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
         <p className="text-lg md:text-xl text-white/90 leading-relaxed font-light relative z-10">
-          "May this year bring you as much joy, brilliance, and success as you bring to the world. Keep shining like the star you are!"
+          "{birthdayMessage || "May this year bring you as much joy, brilliance, and success as you bring to the world. Keep shining like the star you are!"}"
         </p>
         <div className="mt-6 flex justify-end">
           <span className="text-sm text-gold font-medium tracking-wider uppercase">- With love, {wisherName || "Akil"} ❤️</span>
@@ -490,6 +501,7 @@ function App() {
   const [isAdmin, setIsAdmin] = useState(window.location.hash === '#admin');
   const [birthdayName, setBirthdayName] = useState('Nanba');
   const [wisherName, setWisherName] = useState('Akil');
+  const [birthdayMessage, setBirthdayMessage] = useState('May this year bring you as much joy, brilliance, and success as you bring to the world. Keep shining like the star you are!');
   const [isLoading, setIsLoading] = useState(true);
   const audioRef = React.useRef(null);
 
@@ -502,19 +514,26 @@ function App() {
           const data = await response.json();
           setBirthdayName(data.birthdayName);
           setWisherName(data.wisherName);
+          setBirthdayMessage(data.birthdayMessage);
         }
       } catch (error) {
         console.error("Failed to fetch config:", error);
         // Fallback to local storage if available
         const localBday = localStorage.getItem('bday_name');
         const localWisher = localStorage.getItem('wisher_name');
+        const localMessage = localStorage.getItem('bday_message');
         if (localBday) setBirthdayName(localBday);
         if (localWisher) setWisherName(localWisher);
+        if (localMessage) setBirthdayMessage(localMessage);
       } finally {
         setIsLoading(false);
       }
     };
     fetchData();
+
+    // Poll for changes every 30 seconds to catch global updates
+    const interval = setInterval(fetchData, 30000);
+    return () => clearInterval(interval);
   }, []);
 
   useEffect(() => {
@@ -603,6 +622,7 @@ function App() {
             key="admin"
             currentBirthdayName={birthdayName}
             currentWisherName={wisherName}
+            currentBirthdayMessage={birthdayMessage}
             onExit={() => {
               window.location.hash = '';
               setIsAdmin(false);
@@ -617,8 +637,10 @@ function App() {
                 if (response.ok) {
                   setBirthdayName(birthdayName);
                   setWisherName(wisherName);
+                  setBirthdayMessage(birthdayMessage);
                   localStorage.setItem('bday_name', birthdayName);
                   localStorage.setItem('wisher_name', wisherName);
+                  localStorage.setItem('bday_message', birthdayMessage);
                   return true;
                 } else {
                   const err = await response.json();
@@ -634,7 +656,7 @@ function App() {
           <>
             {stage === 'gift' && <GiftLanding key="gift" onOpen={handleOpenGift} />}
             {stage === 'cake' && <CakeRitual key="cake" onBlow={handleBlowCandle} isMuted={isMuted} toggleMute={toggleMute} />}
-            {stage === 'reveal' && <GrandReveal key="reveal" birthdayName={birthdayName} wisherName={wisherName} />}
+            {stage === 'reveal' && <GrandReveal key="reveal" birthdayName={birthdayName} wisherName={wisherName} birthdayMessage={birthdayMessage} />}
           </>
         )}
       </AnimatePresence>

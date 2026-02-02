@@ -13,17 +13,18 @@ export const handler = async (event, context) => {
                 statusCode: 200,
                 headers: {
                     "Content-Type": "application/json",
-                    "Cache-Control": "no-cache" // Ensure users always get the latest names
+                    "Cache-Control": "no-cache"
                 },
                 body: JSON.stringify(data || {
                     birthdayName: "Nanba",
-                    wisherName: "Akil"
+                    wisherName: "Akil",
+                    birthdayMessage: "May this year bring you as much joy, brilliance, and success as you bring to the world. Keep shining like the star you are!"
                 }),
             };
         }
 
         if (method === "POST") {
-            const { birthdayName, wisherName, password } = JSON.parse(event.body);
+            const { birthdayName, wisherName, birthdayMessage, password } = JSON.parse(event.body);
 
             if (password !== "Akilan") {
                 return {
@@ -33,7 +34,7 @@ export const handler = async (event, context) => {
             }
 
             // Save to global storage
-            await store.setJSON("names", { birthdayName, wisherName });
+            await store.setJSON("names", { birthdayName, wisherName, birthdayMessage });
 
             return {
                 statusCode: 200,
