@@ -627,11 +627,11 @@ function App() {
               window.location.hash = '';
               setIsAdmin(false);
             }}
-            onSave={async ({ birthdayName, wisherName, password }) => {
+            onSave={async ({ birthdayName, wisherName, birthdayMessage, password }) => {
               try {
                 const response = await fetch('/.netlify/functions/config', {
                   method: 'POST',
-                  body: JSON.stringify({ birthdayName, wisherName, password }),
+                  body: JSON.stringify({ birthdayName, wisherName, birthdayMessage, password }),
                 });
 
                 if (response.ok) {
